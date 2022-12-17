@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="a"
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 792">
+    <defs>
+        <style>.b{fill:#fff;stroke:#231f20;stroke-miterlimit:10;}</style>
+    </defs>
+    <polyline class="b" points="49.47 137.2 49.47 406.59 376 406.59"/>
+    <path class="b" d="M80.08,199.45c47.6-31.25,78.37-33.13,98.98-24.49,46.78,19.61,42.12,93.82,86.73,109.18,26.88,9.26,58.56-7.35,86.73-29.59"/>
+    <circle class="b" cx="365.8" cy="229.04" r="20.41"/>
+    <rect class="b" x="107.63" y="34.14" width="26.53" height="87.76"/>
+</svg>
