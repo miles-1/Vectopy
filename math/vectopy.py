@@ -1,4 +1,4 @@
-import lxml.etree as et
+import xml.etree.ElementTree as et
 from error import checkInput
 from static import default_attrs, draw_tools
 
@@ -35,7 +35,7 @@ class Shape(et.Element):
         # Add drawing command
         if "d" not in self.attrs:
             self.attrs["d"] = ""
-        self.attrs["d"] += f"{tool} {' '.join(nums)} "
+        self.attrs["d"] += f"{tool} {' '.join(str(num) for num in nums)} "
 
 
 SVG()
