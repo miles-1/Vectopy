@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as et
-from error import checkInput
+from etc import checkType
 from static import default_attrs, draw_tools
 
 
@@ -17,19 +17,37 @@ class SVG:
             "g_surf": g_surf,
         }
     
-    def definePath(self):
-        pass
+    def definePath(self, symbol_id, draw, overflow="visible", stroke="none"):
+        # check input
 
-    def usePath(self):
-        pass
-    
+        # symbol tag
+        symbol_attribs = {"overflow": overflow, "id": symbol_id}
+        symbol_tag = et.SubElement(self.main_tags["g_defs"], "symbol", attrib=symbol_attribs)
+        # path tag
+        path_attribs = {"style": f"stroke:{stroke};", "d": draw}
+        et.SubElement(symbol_tag, "symbol", attrib=path_attribs)
+
+    def usePath(self, symbol_id, x=0, y=0, fill=(0, 0, 0), stroke=None, opacity=1):
+        # check input
+
+        # g tag
+        g_tag = et.SubElement(self.main_tags["g_surf"], "g")
+        # use tag
+        use_attribs = {
+            "href":         f"#{symbol_id}", 
+            "x":            f"\"{x}\"", 
+            "y":            f"\"{y}\"",
+            "fill":         f"rgb({fill})",
+            "fill-opacity": f"\"{opacity}\"",
+            "stroke":       f""
+        }
     def __str__(self):
-        return et.tostring(self.main_tags["svg"], pretty_print=True).decode("utf8")
+        return et.tostring(self.main_tags["svg"]).decode("utf8")
 
 class Shape(et.Element):
     def draw(self, tool, *nums):
         # Errors
-        checkInput((("tool", str, tool), ("nums", (float,), nums)))
+        checkType((("tool", str, tool), ("nums", (float,), nums)))
         if tool not in draw_tools:
             raise TypeError(f"tool must be one of the following: {list(draw_tools)}")\
         # Add drawing command
@@ -59,14 +77,14 @@ SVG()
 #     old_name = symbol.attrib["id"]
 #     with open(svg_file_name, "wb") as f:
 #         symbol.attrib["id"] = ""
-#         f.write(et.tostring(root, pretty_print=True))
+#         f.write(et.tostring(root))
 #     new_name = input(f"Old name: {old_name}. New name: ")
 #     if new_name:
 #         symbol.attrib["id"] = new_name
 #         for elem in old_names[old_name]:
 #             elem.attrib[xlink+"href"] = f"#{new_name}"
 #         with open(svg_file_name, "wb") as f:
-#             f.write(et.tostring(root, pretty_print=True))
+#             f.write(et.tostring(root))
 #     else:
 #         symbol.attrib["id"] = old_name
 
