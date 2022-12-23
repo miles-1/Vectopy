@@ -121,18 +121,22 @@ Then, this `symbol` is `use`d in a later `g` tag to place it:
 - `stroke-miterlimit`
 - `stroke-opacity`
 - `stroke-width`
-- `transform`
-    - This can take several arguments, which can be written one after another, such as follows:
-    - `matrix(<a> <b> <c> <d> <e> <f>)`, where each coordinate pair `$x // y // 1$` is multiplied to the matrix `$a | b | c // d | e | f // 0 | 0 | 1$` to obtain the new coordinates.
-    - `translate(<x> [<y>])`
-    - `scale(<x> [<y>])`
-    - `rotate(<x> [<y>])`
-    - `skewX(<a>)`, `skewY(<a>)`
 - `vector-effect`
 - `visibility`
+- `transform`
+    - This can take several arguments, which can be written one after another, such as follows:
+    
+    |command|description/equivalency|
+    |-|-|
+    |`matrix(<a> <b> <c> <d> <e> <f>)`|each coordinate pair `$x // y // 1$` is multiplied to the matrix `$<a> \| <b> \| <c> // <d> \| <e> \| <f> // 0 \| 0 \| 1$` to obtain the new coordinates|
+    |`translate(<tx> [<ty>])`| same as `matrix(1 0 <tx> 0 1 <ty>)`|
+    | `scale(<sx> [<sy>])`| same as `matrix(<sx> 0 0 0 <sy> 0)`|
+    | `rotate(<a> [<cx> <cy>])`| same as `matrix(cos(<a>) -sin(<a>) <cx>*(1-cos(<a>))+<cy>*sin(<a>) sin(<a>) cos(<a>) <cy>*(1-cos(<a>))-<cx>*sin(<a>))`
+    | `skewX(<a>)`| same as `matrix(1 tan(<a>) 0 0 1 0)`|
+    | `skewY(<a>)`| same as `matrix(1 0 0 tan(<a>) 1 0)`|
 
 
-Paths can be rendered outside of A horizontal line might be drawn like this:
+Paths can be created and rendered outside of the `defs` tag. A horizontal line might be drawn like this:
 
 ```xml
 <path 
