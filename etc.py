@@ -49,6 +49,7 @@ class Group:
             if isinstance(use, Use):
                 width, height = use.width, use.height
                 cursor = iteradd(cursor, (width+xsep, 0))
+                use.set(x=cursor[0], y=cursor[1])
             elif use == " ":
                 cursor = iteradd(cursor, (space, 0))
             elif use == "\n":
@@ -75,7 +76,7 @@ class Use(et.Element):
         self.attrib.update(kwargs)
         for string, variable in (("x", x), ("y", y)):
             if variable:
-                self.attrib[string] = variable
+                self.attrib[string] = str(variable)
         self._updateBbox()
     
     def _updateBbox(self):
@@ -180,7 +181,8 @@ class Path(et.Element):
                            nums[:2]
                 current_point = nums[-2:]
                 prev_ctrl = nums[-4:-2]
-                points.append(getBezier(nums)[1:])
+                nums = tuple(zip(nums[::2], nums[1::2]))
+                points.extend(getBezier(nums)[1:])
         return points
 
     def draw(self, tool, *nums):

@@ -170,6 +170,6 @@ class SVG:
 svg = SVG(height=700)
 symbols = tuple(svg.full_symbols_dict.keys())[:10]
 uses = svg.makeUses(symbols)
-Group(uses).linearSet(x=5, y=5)
+Group(*uses).linearSet(x=20, y=20, xsep=20)
 
 svg.save("test.svg")
