@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as et
 from typecheck import checkType, Op, Ex, Any
 from static import default_attrs, full_symbols_dict
-from etc import Path, Symbol, Group
+from etc import Path, Use, Group, Num
 
 
 class SVG:
@@ -73,7 +73,7 @@ class SVG:
         return {symbol_id: self.defPath(symbol_id, draw, overflow=overflow, stroke=stroke) \
             for symbol_id, draw in symbol_dict.items()}
 
-    def usePath(self, symbol_id, x=0, y=0, fill=(0, 0, 0), stroke=0, opacity=1, **kwargs):
+    def makeUse(self, symbol_id, x=0, y=0, fill=(0, 0, 0), stroke=0, opacity=1, **kwargs):
         # check input
         checkType(
             ("symbol_id", str, symbol_id),
@@ -100,13 +100,15 @@ class SVG:
             "stroke":       f"{stroke}",
         }
         use_attribs.update(kwargs)
-        return Use(g_tag, attrib=use_attribs)
+        return Use(g_tag, self.defined_symbols[symbol_id], attrib=use_attribs)
     
-    def usePaths(self, symbol_dict):
+    def makeUses(self, symbol_tuple, **attribs):
         # check input
-        checkType("symbol_dict", {str: {str: Any()}}, symbol_dict)
-        return {symbol_id: self.usePath(symbol_id, **attribs) \
-            for symbol_id, attribs in symbol_dict.items()}
+        checkType(
+            ("symbol_dict", (str,), symbol_tuple),
+            ("attribs", Op({str: Op(Num(), str)}, Ex({})), attribs),
+        )
+        return tuple(self.makeUse(symbol_id, **attribs) for symbol_id in symbol_tuple)
     
     def displaySymbols(self, symbol_id=None, show_handles=False, cursor=(5,5), rowsep=0, **kwargs):
         # check input
@@ -124,7 +126,7 @@ class SVG:
             for i, (i_id, i_path) in enumerate(self.defined_symbols.items()):
                 i_cursor = (cursor[0]+rowsep, cursor[1])
                 self.displaySymbols(i_id, show_handles=show_handles, )
-        self.usePath(symbol_id)
+        self.makeUse(symbol_id)
 
     def addText(self, text, x=0, y=0, xsep=0, ysep=0, \
                 width=None, height=None, align="left", **kwargs):
@@ -153,7 +155,6 @@ class SVG:
                     pass # TODO: add horizontal space to cursor
             pass # TODO: add vertical space to cursor (alignment sensitive)
 
-
     def __str__(self):
         return et.tostring(self.main_tags["svg"]).decode("utf8")
     
@@ -165,9 +166,10 @@ class SVG:
 
 
 
-# svg = SVG(height=700)
-# svg.usePaths(
-#     {symbol: {"x":5, "y":num*10+5} \
-#         for num, symbol in enumerate(svg.full_symbols_dictionary.keys())}
-# )
-# svg.save("test.svg")
+
+svg = SVG(height=700)
+symbols = tuple(svg.full_symbols_dict.keys())[:10]
+uses = svg.makeUses(symbols)
+Group(uses).linearSet(x=5, y=5)
+
+svg.save("test.svg")

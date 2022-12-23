@@ -14,12 +14,12 @@ class Group:
     """
     def __init__(self, *use_lst):
         checkType(
-            ("use_lst", (Use, Ex(" ", "\n")), use_lst),
+            ("use_lst", (Use,), use_lst),
         )
         self.use_lst = use_lst
     
     def getBbox(self):
-        bboxes = tuple(use.bbox for use in self.use_lst if isinstance())
+        bboxes = tuple(use.bbox for use in self.use_lst)
         return np.array(
             tuple(func(mat[row,col] for mat in bboxes) for col in range(2)) \
             for row, func in enumerate((min, max))
@@ -34,7 +34,7 @@ class Group:
         for use in self.use_lst:
             use.transform(dx, dy, transform)
     
-    def linearSet(self, x, y, xsep=0.1, ysep=0.1, width=None, height=None, **kwargs):
+    def linearSet(self, x, y, xsep=0.1, ysep=0.1, space=10, width=None, height=None, **kwargs):
         checkType(
             ("x", Num(), x),
             ("y", Num(), y),
@@ -44,12 +44,15 @@ class Group:
             ("height", Op(Num(0, None), Ex(None)), height),
         )
         cursor = (x, y)
+        baseline = x
         for use in self.use_lst:
             if isinstance(use, Use):
-                symbol_width, symbol_height = use.width, use.height
-        
-    
-
+                width, height = use.width, use.height
+                cursor = iteradd(cursor, (width+xsep, 0))
+            elif use == " ":
+                cursor = iteradd(cursor, (space, 0))
+            elif use == "\n":
+                cursor = iteradd(cursor, (-baseline, height+ysep))
 
 
 class Use(et.Element):
