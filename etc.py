@@ -2,16 +2,11 @@ import xml.etree.ElementTree as et
 from typecheck import checkType, Op, Ex
 from static import draw_tools, translate_tools
 import numpy as np
-from misc import getBezier
+from misc import getBezier, iteradd
 import re
 
 def reflect(x, y, cx, cy):
     return  2*cx-x, 2*cy-y
-
-def ptsum(pt1, pt2):
-    if len(pt1) == 2:
-        return tuple(pt1[i]+pt2[i] for i in range(2))
-    elif len(pt2) == 
 
 class Group:
     """
@@ -34,8 +29,6 @@ class Group:
     def transform(self, **kwargs):
         for use in self.use_lst:
             use.transform(**kwargs)
-    
-
 
 
 class Use(et.Element):
@@ -141,21 +134,21 @@ class Path(et.Element):
             nums = tuple(float(i) for i in args[1:])
             # H or V: one arg
             if tool_letter.lower() == "h":
-                current_point = ptsum(current_point, (nums[0], 0)) if is_rel else (nums[0], current_point[1])
+                current_point = iteradd(current_point, (nums[0], 0)) if is_rel else (nums[0], current_point[1])
                 prev_ctrl = None
                 points.append(current_point)
             elif tool_letter.lower() == "v":
-                current_point = ptsum(current_point, (0, nums[0])) if is_rel else (current_point[0], nums[1])
+                current_point = iteradd(current_point, (0, nums[0])) if is_rel else (current_point[0], nums[1])
                 prev_ctrl = None
                 points.append(current_point)
             # M or L: two args
             elif tool_letter.lower() in ("m", "l"): 
-                current_point = ptsum(current_point, nums) if is_rel else nums
+                current_point = iteradd(current_point, nums) if is_rel else nums
                 prev_ctrl = None
                 points.append(current_point)
             # T, Q, S or C (beziers): 2, 4 or 6 args
             elif tool_letter.lower() in ("t", "q", "s", "c"):
-                nums = ptsum(nums, current_point) if is_rel else nums
+                nums = iteradd(nums, current_point) if is_rel else nums
                 if tool_letter.lower() in ("t", "s"):
                     nums = nums[:2] + \
                            reflect(prev_ctrl, current_point) if prev_ctrl else current_point + \
