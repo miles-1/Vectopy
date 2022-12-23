@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as et
-from typecheck import checkType, Op, Ex
+from typecheck import checkType, Op, Ex, Num
 from static import draw_tools, translate_tools
 import numpy as np
 from misc import getBezier, iteradd
@@ -13,22 +13,43 @@ class Group:
     Collection of uses
     """
     def __init__(self, *use_lst):
-        # Errors
         checkType(
-            ("use_lst", (Use,), use_lst),
+            ("use_lst", (Use, Ex(" ", "\n")), use_lst),
         )
         self.use_lst = use_lst
     
     def getBbox(self):
-        bboxes = tuple(use.bbox for use in self.use_lst)
+        bboxes = tuple(use.bbox for use in self.use_lst if isinstance())
         return np.array(
             tuple(func(mat[row,col] for mat in bboxes) for col in range(2)) \
             for row, func in enumerate((min, max))
         )
     
-    def transform(self, **kwargs):
+    def transform(self, dx=0, dy=0, transform=""):
+        checkType(
+            ("dx", Num(), dx),
+            ("dy", Num(), dy),
+            ("transform", str, transform),
+        )
         for use in self.use_lst:
-            use.transform(**kwargs)
+            use.transform(dx, dy, transform)
+    
+    def linearSet(self, x, y, xsep=0.1, ysep=0.1, width=None, height=None, **kwargs):
+        checkType(
+            ("x", Num(), x),
+            ("y", Num(), y),
+            ("xsep", Num(), xsep),
+            ("ysep", Num(), ysep),
+            ("width", Op(Num(0, None), Ex(None)), width),
+            ("height", Op(Num(0, None), Ex(None)), height),
+        )
+        cursor = (x, y)
+        for use in self.use_lst:
+            if isinstance(use, Use):
+                symbol_width, symbol_height = use.width, use.height
+        
+    
+
 
 
 class Use(et.Element):
@@ -85,6 +106,7 @@ class Use(et.Element):
         for key, change in (("x",dx), ("y",dy), ("transform",transform)):
             if change:
                 self.attrib[key] += change
+        self._updateBbox()
 
 
 class Path(et.Element):
