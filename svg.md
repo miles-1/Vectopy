@@ -47,7 +47,7 @@ The general structure of a symbol object is as follows:
     <path style="stroke:none;" d=""/>
 </symbol>
 ```
-Give `id` a unique string. `d` is a series of `(x, y)` (sometimes more) points that can be defined as follows:
+Give `id` a unique string. `d` is a series of `(x, y)` (sometimes more) points that can be defined with drawing commands. Some are listed here, and all can be found [here](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d):
 
 | char | meaning | inputs |
 |---|---|---|

@@ -2,20 +2,16 @@ import xml.etree.ElementTree as et
 from typecheck import checkType, Op, Ex, Num
 from static import draw_tools, translate_tools
 import numpy as np
-from misc import getBezier, iteradd
+from funcs import getBezier, iteradd, reflect, getBbox, getDims
 import re
 
-def reflect(x, y, cx, cy):
-    return  2*cx-x, 2*cy-y
 
 class Group:
     """
     Collection of uses
     """
     def __init__(self, *use_lst):
-        checkType(
-            ("use_lst", (Use,), use_lst),
-        )
+        checkType("use_lst", (Use,), use_lst)
         self.use_lst = use_lst
     
     def getBbox(self):
@@ -45,14 +41,14 @@ class Group:
         )
         cursor = (x, y)
         baseline = x
-        for use in self.use_lst:
+        for use in self.use_lst: # TODO uhhh
             if isinstance(use, Use):
                 width, height = use.width, use.height
                 cursor = iteradd(cursor, (width+xsep, 0))
-                use.set(x=cursor[0], y=cursor[1])
+                use.place(x=cursor[0], y=cursor[1], **kwargs)
             elif use == " ":
                 cursor = iteradd(cursor, (space, 0))
-            elif use == "\n":
+            elif use == "\n": 
                 cursor = iteradd(cursor, (-baseline, height+ysep))
 
 
@@ -72,44 +68,40 @@ class Use(et.Element):
         self.pos_mat = np.eye(3)
         self._updateBbox()
     
-    def set(self, x=None, y=None, **kwargs):
-        self.attrib.update(kwargs)
+    def place(self, x=None, y=None, **kwargs):
+        for key, value in kwargs.items():
+            self.set(key, value)
         for string, variable in (("x", x), ("y", y)):
             if variable:
-                self.attrib[string] = str(variable)
+                self.set(string, str(variable))
         self._updateBbox()
     
     def _updateBbox(self):
         has_transform = "transform" in self.attrib
         has_x_y = "x" in self.attrib and "y" in self.attrib
         if has_transform:
-            transform_lst = re.split(
-                "(?<=\))", 
-                re.sub("\s+"," ", self.attrib["transform"])
-            )
+            
             for transform in transform_lst:
+                transform = transform.strip().replace(" ", ",")
                 t_info = tuple(i.strip() for i in re.split("[(,)]", transform) if i)
                 t_type = t_info[0]
                 t_args = tuple(float(i) for i in t_info[1:])
-                self.transform_mat = translate_tools[t_type](t_args) @ self.transform_mat 
+                self.transform_mat = translate_tools[t_type](*t_args) @ self.transform_mat 
             if has_x_y:
                 for row, comp in enumerate(("x", "y")):
                     self.pos_mat[row, 2] = float(self.attrib[comp])
             temp_bbox = np.eye(3)
             temp_bbox[:2, :2] = np.transpose(self.d_bbox)
             self.bbox = np.transpose((self.pos_mat @ self.transform_mat @ temp_bbox)[:2, :2])
-        self._updateDims()
+        self.width, self.height = getDims(self.bbox)
     
     def getBbox(self):
         return self.bbox
-        
-    def _updateDims(self):
-        self.width, self.height = (self.bbox[1][indx] - self.bbox[0][indx] for indx in range(2))
     
     def transform(self, dx=0, dy=0, transform=""):
         for key, change in (("x",dx), ("y",dy), ("transform",transform)):
             if change:
-                self.attrib[key] += change
+                self.set(key, self.attrib[key] + change)
         self._updateBbox()
 
 
@@ -131,19 +123,14 @@ class Path(et.Element):
             func = tool.func
             num_args = tool.num_args
             setattr(self, func, lambda *args: self._makeTools(num_args, tool_name, args))
-        self.attrib["d"] = re.sub("\s+", " ", self.attrib["d"])
+        self.set("d", re.sub("\s+", " ", self.attrib["d"]))
 
     def getD(self):
         return self.attrib["d"]
     
     def getBbox(self):
         # [[xmin, ymin], [xmax, ymax]]
-        point_lst = self.getApproxPoints()
-        if point_lst:
-            x_vals, y_vals = (tuple(point[i] for point in point_lst) for i in range(2))
-            return np.array(tuple(tuple(func(val_lst) for func in (min, max)) for val_lst in (x_vals, y_vals)))
-        else:
-            return np.zeros((2, 2))
+        return getBbox(self.getApproxPoints())
 
     def getSymbolId(self):
         return self.symbol_id
@@ -194,8 +181,8 @@ class Path(et.Element):
         )
         # Add drawing command
         if "d" not in self.attrs:
-            self.attrib["d"] = ""
-        self.attrib["d"] += f"{tool} {' '.join(str(num) for num in nums)} "
+            self.set("d", "")
+        self.set("d", self.attrib["d"] + f"{tool} {' '.join(str(num) for num in nums)} ")
     
     def _makeTools(self, num_arg, tool_name, args):
         # Errors
@@ -207,4 +194,4 @@ class Path(et.Element):
         return self.draw(tool_name, *args)
 
     def clearDraw(self):
-        self.attrib["d"] = ""
+        self.set("d", "")

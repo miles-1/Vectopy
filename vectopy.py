@@ -1,7 +1,10 @@
 import xml.etree.ElementTree as et
-from typecheck import checkType, Op, Ex, Any
+from typecheck import checkType, Op, Ex
 from static import default_attrs, full_symbols_dict
 from etc import Path, Use, Group, Num
+
+def reflect(x, y, cx, cy):
+    return  2*cx-x, 2*cy-y
 
 
 class SVG:
@@ -21,8 +24,7 @@ class SVG:
         # make document structure
         svg_attribs, defs_attribs, g_attribs = \
             (default_attrs[key] for key in ("svg","defs","g"))
-        svg_attribs["width"], svg_attribs["height"], svg_attribs["viewBox"] = \
-            width, height, viewbox
+        svg_attribs.update({"width": width, "height": height, "viewBox": viewbox})
         svg = et.Element("svg", attrib=svg_attribs)
         defs = et.SubElement(svg, "defs", attrib=defs_attribs)
         g_defs = et.SubElement(defs, "g", attrib=g_attribs)
@@ -167,9 +169,11 @@ class SVG:
 
 
 
-svg = SVG(height=700)
+svg = SVG(height=700, width=1000)
 symbols = tuple(svg.full_symbols_dict.keys())[:10]
 uses = svg.makeUses(symbols)
-Group(*uses).linearSet(x=20, y=20, xsep=20)
+uses2 = svg.makeUses(symbols)
+Group(*uses).linearSet(x=20, y=20, xsep=0, transform="scale(3,3)")
+Group(*uses2).linearSet(x=20, y=50, xsep=0, transform="scale(2,2)")
 
 svg.save("test.svg")
